@@ -19,13 +19,19 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY mcp_server.py .
 COPY jisilu_mcp_server.py .
 COPY wechat_server.py .
+COPY logging_config.py .
 COPY config.json .
 
 # 暴露端口（默认 4567）
 EXPOSE 4567
 
+# 创建日志目录
+RUN mkdir -p /app/logs
+
 # 设置环境变量
 ENV PORT=4567
+ENV PYTHONUNBUFFERED=1
+ENV ENV=prod
 
 # 运行 MCP 服务器
 CMD ["python", "mcp_server.py"]

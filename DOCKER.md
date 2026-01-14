@@ -37,12 +37,30 @@ docker run -d \
 
 可以通过环境变量覆盖默认配置：
 
+### 可用的环境变量
+
+- **PORT**: 服务端口，默认 `4567`
+- **ENV**: 运行环境，可选值 `prod`（生产）或 `dev`（开发），默认 `prod`
+  - `prod`: 日志同时输出到文件和控制台
+  - `dev`: 日志仅输出到控制台
+- **SCT_KEY**: Server 酱推送密钥
+
+### 使用示例
+
 ```bash
+# 生产环境（启用文件日志）
 docker run -d \
   --name mcp-server \
   -p 4567:4567 \
-  -e PORT=8080 \
+  -e ENV=prod \
   -e SCT_KEY=your_sct_key_here \
+  mcp-arbitrage-server
+
+# 开发环境（仅控制台日志）
+docker run -d \
+  --name mcp-server \
+  -p 4567:4567 \
+  -e ENV=dev \
   mcp-arbitrage-server
 ```
 
@@ -56,6 +74,47 @@ docker run -d \
 ```bash
 # 在宿主机上运行测试
 python test_mcp_server.py
+```
+
+## 日志管理
+
+### 日志位置
+
+默认配置下，日志会输出到以下位置：
+
+1. **容器日志**：通过 `docker logs` 查看标准输出
+2. **应用日志文件**：`/data/logs/stock_arbitrade_notify_mcp/mcp_server_YYYYMMDD.log`
+
+### 查看日志
+
+```bash
+# 查看容器标准输出日志
+docker-compose logs -f
+
+# 查看应用日志文件（在宿主机上）
+tail -f /data/logs/stock_arbitrade_notify_mcp/mcp_server_$(date +%Y%m%d).log
+
+# 查看最近 100 行日志
+docker logs --tail 100 mcp-arbitrage-server
+```
+
+### 日志配置
+
+日志配置在 `docker-compose.yml` 中：
+
+- **日志驱动**: json-file
+- **单个日志文件大小**: 10MB
+- **保留日志文件数**: 3 个
+- **日志目录**: `/data/logs/stock_arbitrade_notify_mcp`
+
+### 自定义日志目录
+
+如需修改日志目录，编辑 `docker-compose.yml`：
+
+```yaml
+volumes:
+  # 修改为你的日志目录
+  - /your/custom/log/path:/app/logs
 ```
 
 ## 常用命令
@@ -102,11 +161,21 @@ services:
 
 ### 2. 持久化日志
 
+默认已配置日志持久化到 `/data/logs/stock_arbitrade_notify_mcp`：
+
 ```yaml
 services:
   mcp-server:
     volumes:
-      - ./logs:/app/logs
+      - /data/logs/stock_arbitrade_notify_mcp:/app/logs
+```
+
+**注意**：确保宿主机上的日志目录具有适当的权限：
+
+```bash
+# 创建日志目录并设置权限
+sudo mkdir -p /data/logs/stock_arbitrade_notify_mcp
+sudo chmod 755 /data/logs/stock_arbitrade_notify_mcp
 ```
 
 ### 3. 资源限制

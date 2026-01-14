@@ -94,6 +94,7 @@ def _parse_with_regex(html: str) -> List[Dict[str, Any]]:
 
 
 def _fetch_api_rows() -> List[Dict[str, Any]]:
+    """从集思录 API 获取数据，包括 QDII 和 LOF 基金"""
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
         "Referer": "https://www.jisilu.cn/data/qdii/",
@@ -101,6 +102,8 @@ def _fetch_api_rows() -> List[Dict[str, Any]]:
         "Accept-Language": "zh-CN,zh;q=0.9",
     }
     out: List[Dict[str, Any]] = []
+    
+    # 1. 获取 QDII 数据
     for cat in ["E", "C", "A"]:
         url = f"https://www.jisilu.cn/data/qdii/qdii_list/{cat}"
         params = {"___jsl": f"LST___t={int(time.time()*1000)}", "rp": "22"}
@@ -131,7 +134,44 @@ def _fetch_api_rows() -> List[Dict[str, Any]]:
                 "T-1溢价率": str(cell.get("discount_rt", "")),
                 "申购状态": str(cell.get("apply_status", "")),
             })
+    
+    # 2. 获取 LOF 数据
+    lof_url = "https://www.jisilu.cn/data/lof/index_lof_list/"
+    lof_params = {
+        "___jsl": f"LST___t={int(time.time()*1000)}",
+        "rp": "25",
+        "page": "1"
+    }
+    try:
+        data = None
+        if httpx is not None:
+            resp = httpx.get(lof_url, params=lof_params, headers=headers, timeout=20)
+            resp.raise_for_status()
+            data = resp.json()
+        else:
+            import urllib.parse
+            import urllib.request
+            q = urllib.parse.urlencode(lof_params)
+            req = urllib.request.Request(lof_url + "?" + q, headers=headers)
+            with urllib.request.urlopen(req, timeout=20) as f:
+                data = json.loads(f.read().decode("utf-8", errors="ignore"))
+        
+        if isinstance(data, dict):
+            for row in data.get("rows", []):
+                cell = row.get("cell", {})
+                # LOF 数据格式可能与 QDII 略有不同，需要适配
+                out.append({
+                    "代码": str(cell.get("fund_id", "")),
+                    "名称": str(cell.get("fund_nm", "")),
+                    "T-1溢价率": str(cell.get("discount_rt", "")),
+                    "申购状态": str(cell.get("apply_status", "")),
+                })
+    except Exception as e:
+        # LOF 数据获取失败时不影响整体流程，记录错误但继续
+        pass
+    
     return out
+
 
 def _fetch_ak_rows() -> List[Dict[str, Any]]:
     try:

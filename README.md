@@ -40,13 +40,31 @@ pip install -r requirements.txt
 - `deepseek_api_key`: DeepSeek API 密钥（如需使用 AI 功能）
 - `deepseek_base_url`: DeepSeek API 服务地址
 
+### 环境变量（可选）
+
+可以通过环境变量覆盖配置文件中的设置：
+
+- **ENV**: 运行环境，可选值 `prod`（生产）或 `dev`（开发）
+  - `prod`: 日志同时输出到文件（`/app/logs/`）和控制台
+  - `dev`: 日志仅输出到控制台（默认）
+- **PORT**: 服务端口，默认 `4567`
+- **SCT_KEY**: Server 酱推送密钥，优先级高于配置文件
+
+```bash
+# 生产环境启动（启用文件日志）
+ENV=prod python mcp_server.py
+
+# 开发环境启动（仅控制台日志）
+ENV=dev python mcp_server.py
+```
+
 ### 启动 MCP 服务器
 
 ```bash
 python mcp_server.py
 ```
 
-服务器将在 `http://127.0.0.1:4096` 启动，使用 HTTP 传输方式。
+服务器将在 `http://127.0.0.1:4567` 启动，使用 SSE 传输方式。
 
 ## 🔧 可用工具
 

@@ -8,11 +8,19 @@ services:
       - "4567:4567"
     environment:
       - PORT=4567
+      - ENV=prod # 设置为生产环境，启用文件日志
       # 可以通过环境变量覆盖 config.json 中的配置
       # - SCT_KEY=your_sct_key_here
     volumes:
       # 如果需要在运行时更新配置，可以挂载 config.json
       - ./config.json:/app/config.json:ro
+      # 挂载日志目录到宿主机
+      - /data/logs/stock_arbitrade_notify_mcp:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
     networks:
       - mcp-network
