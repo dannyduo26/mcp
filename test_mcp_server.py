@@ -9,7 +9,8 @@ from mcp.client.sse import sse_client
 
 async def test_arbitrage_mcp():
     # MCP 服务器地址
-    server_url = "http://www.dd26.icu:4567/sse"
+    # server_url = "http://www.dd26.icu:4567/sse"
+    server_url = "http://localhost:4567/sse"
     
     print(f"正在连接到 MCP 服务器: {server_url}...")
     
@@ -30,7 +31,7 @@ async def test_arbitrage_mcp():
                 print("=" * 50)
                 
                 # 测试不同的阈值
-                thresholds = [1.0, 2.0, 3.0]
+                thresholds = [2.0]
                 
                 for threshold in thresholds:
                     print(f"\n正在获取溢价率 >= {threshold}% 的基金...")
@@ -51,8 +52,8 @@ async def test_arbitrage_mcp():
                             
                             # 显示前3只基金
                             if candidates and isinstance(candidates, list):
-                                print(f"\n前{min(3, len(candidates))}只基金:")
-                                for i, fund in enumerate(candidates[:3], 1):
+                                print(f"\n共 {len(candidates)} 只基金:")
+                                for i, fund in enumerate(candidates, 1):
                                     if isinstance(fund, dict):
                                         print(f"  {i}. {fund.get('名称', 'N/A')} ({fund.get('代码', 'N/A')})")
                                         print(f"     溢价率: {fund.get('T-1溢价率', 'N/A')}%")
